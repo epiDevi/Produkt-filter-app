@@ -1,10 +1,21 @@
 <template>
     <div>
         <h1>🛍 Produktliste</h1>
+        <!-- Filter & Suche -->
+         <div class="filter-var">
+            <input type="text" v-model="search" placeholder="Nach Product suchen">
+            <select v-model="selectedCategory" name="" id="">
+                <option value="">Alle Kategorien</option>
+                <option v-for="cat in categories" :key="cat.id" :value="cat">
+                    {{ cat }}
+                </option>
+            </select>
+         </div>
+
         <div v-if="loading">Lade Producte . . .</div>
         <div v-else-if="error"> Fehler beim laden :(</div>
         <div v-else class="product-grid">
-            <div v-for="product in products" :key="product.id" class="product-card">
+            <div v-for="product in filteredProducts" :key="product.id" class="product-card">
                 <img :src="product.image" :alt="product.descripton">
                 <h3>{{ product.title }}</h3>
                 <p>{{ product.price }}</p>
@@ -17,18 +28,27 @@
 </template>
 
 <script>
-import {ref, onMounted} from 'vue'
+import {ref,computed, onMounted} from 'vue'
 export default {
     setup(){
         const products= ref([])
+        const categories = ref([])
         const loading= ref(true)
         const error= ref(false)
 
+        const search= ref('')
+        const selectedCategory= ref('')
+
         onMounted(async ()=> {
             try{
+                // Producte laden
                 const resp= await fetch ('https://fakestoreapi.com/products')
                 products.value = await resp.json()
                 console.log(products);
+
+                // kategorie laden
+                const resc= await fetch ('https://fakestoreapi.com/products/categories')
+                categories.value= await resc.json()
                 
 
             } catch (e){
@@ -37,7 +57,14 @@ export default {
                 loading.value= false
             }
         })
-        return {products, loading, error}
+        const filteredProducts= computed(()=> {
+            return products.value.filter((product) => {
+                const matchessearch = product.title.toLowerCase().includes(search.value.toLowerCase())
+                const matchCategory = selectedCategory.value === '' || product.category === selectedCategory.value
+                return matchessearch && matchCategory
+            })
+        })
+        return {products,categories, loading, error, search, selectedCategory, filteredProducts,}
     }
 }
 </script>
