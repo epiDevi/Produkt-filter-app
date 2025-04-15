@@ -1,6 +1,7 @@
 <template>
     <div>
         <h1>🛍 Produktliste</h1>
+        <router-link to="/add">Add new produkt</router-link>
         <!-- Filter & Suche -->
          <div class="filter-var">
             <input type="text" v-model="search" placeholder="Nach Product suchen">
@@ -20,6 +21,7 @@
                 <h3>{{ product.title }}</h3>
                 <p>{{ product.price }}</p>
                 <router-link :to="`/product/${product.id}`">Details ansehen</router-link>
+                <button @click="deleteProdukt(product.id)">🚮 Löschen </button>
 
             </div>
         </div>
@@ -27,10 +29,9 @@
     </div>
 </template>
 
-<script>
+<script setup>
 import {ref,computed, onMounted} from 'vue'
-export default {
-    setup(){
+
         const products= ref([])
         const categories = ref([])
         const loading= ref(true)
@@ -63,10 +64,21 @@ export default {
                 const matchCategory = selectedCategory.value === '' || product.category === selectedCategory.value
                 return matchessearch && matchCategory
             })
-        })
-        return {products,categories, loading, error, search, selectedCategory, filteredProducts,}
-    }
-}
+        }) 
+
+      async function deleteProdukt(id) {
+        try{
+            await fetch(`https://fakestoreapi.com/products/${id}`, {
+                method: 'DELETE',
+            })
+            products.value=products.value.filter(p => p.id !== id)
+            
+        } catch(e){
+            console.log("Fehler beim Löschen", error);
+            
+        }
+      }
+
 </script>
 
 <style scoped>
